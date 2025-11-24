@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+:root {
+  --font-inter: 'Inter', sans-serif;
+  --font-lora: 'Lora', serif;
+}
+
+@theme {
+  --font-family-inter: var(--font-inter);
+  --font-family-lora: var(--font-lora);
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: var(--font-inter);
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-lora);
+}
+
+/* Your custom styles remain the same */
+.nav-link::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 2px;
+  background: #2563eb;
+  transition: width .25s;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
