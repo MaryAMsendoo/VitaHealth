@@ -359,7 +359,7 @@ export default function BookConsultation() {
           </div>
         </div>
 
-        {/* Consultation Fee & Actions */}
+        {/* Consultation Fee & Action */}
         <div className="border-t border-gray-200 pt-6">
           <div className="flex justify-between items-center mb-4">
             <span className="text-gray-600">Consultation Fee:</span>
