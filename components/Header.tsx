@@ -51,7 +51,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
             <Image 
-              src="/Logo.png" 
+              src="/logo.png" 
               alt="VitaHealth Logo" 
               width={150}
               height={150}
