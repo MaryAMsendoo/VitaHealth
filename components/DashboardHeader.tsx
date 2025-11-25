@@ -28,7 +28,7 @@ export default function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) 
         <div className="flex items-center gap-4 lg:gap-8">
           <div className="flex items-center gap-2">
             <Image 
-              src="/images1/Logo.png" 
+              src="/Logo.png" 
               alt="VitaHealth Logo" 
               width={160}
               height={40}
