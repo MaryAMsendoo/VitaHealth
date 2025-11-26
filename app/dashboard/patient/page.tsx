@@ -173,9 +173,7 @@ export default function PatientDashboard() {
               {upcomingAppointments.map((appointment) => (
                 <div key={appointment.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${
-                      appointment.status === 'confirmed' ? 'bg-green-500' : 'bg-yellow-500'
-                    }`}></div>
+                   
                     <div className="flex-1">
                       <div className="font-semibold text-gray-900">{appointment.description}</div>
                       <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
@@ -325,7 +323,7 @@ export default function PatientDashboard() {
             </div>
             
             <Link
-              href="/ai-assistant"
+              href="/dashboard/ai-assistant"
               className="w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
             >
               <Brain className="w-4 h-4" />

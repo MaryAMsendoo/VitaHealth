@@ -17,7 +17,8 @@ import {
   Bell,
   Heart,
   FileText,
-  Download
+  Download,
+  StickyNote
 } from 'lucide-react'
 
 interface ProfileData {
@@ -226,20 +227,20 @@ export default function Profile() {
 
           {/* Quick Actions */}
           <div className="border-t mt-6 pt-6">
-            <h4 className="text-sm font-semibold text-gray-900 mb-3">Quick Actions</h4>
+            <h4 className="text-sm font-semibold text-gray-900 mb-3">Others</h4>
             <div className="space-y-2">
-              <button className="w-full text-left text-sm text-blue-600 hover:text-blue-700 flex items-center gap-2 p-2 rounded-lg hover:bg-blue-50">
+              <button className="w-full cursor-pointer text-left text-sm text-blue-600 hover:text-blue-700 flex items-center gap-2 p-2 rounded-lg hover:bg-blue-50">
                 <FileText className="w-4 h-4" />
-                Download Medical Records
+                Medical Records
               </button>
-              <button className="w-full text-left text-sm text-blue-600 hover:text-blue-700 flex items-center gap-2 p-2 rounded-lg hover:bg-blue-50">
-                <Shield className="w-4 h-4" />
-                Privacy Settings
+              {/* <button className="w-full text-left text-sm text-blue-600 hover:text-blue-700 flex items-center gap-2 p-2 rounded-lg hover:bg-blue-50">
+                <StickyNote className="w-4 h-4" />
+                Medication History
               </button>
               <button className="w-full text-left text-sm text-blue-600 hover:text-blue-700 flex items-center gap-2 p-2 rounded-lg hover:bg-blue-50">
                 <Bell className="w-4 h-4" />
                 Notification Preferences
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

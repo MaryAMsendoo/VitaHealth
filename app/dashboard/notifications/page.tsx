@@ -299,71 +299,80 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs - Made responsive */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6" aria-label="Tabs">
-            {[
-              { id: 'all', name: 'All Notifications', count: tabCounts.all },
-              { id: 'medication', name: 'Medication Times', count: tabCounts.medication },
-              { id: 'upcoming', name: 'Upcoming Appointments', count: tabCounts.upcoming },
-              { id: 'past', name: 'Past Appointments', count: tabCounts.past }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'border-[#2E37A4] text-[#2E37A4]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                {tab.name}
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  activeTab === tab.id
-                    ? 'bg-[#2E37A4] text-white'
-                    : 'bg-gray-100 text-gray-900'
-                }`}>
-                  {tab.count}
-                </span>
-              </button>
-            ))}
+          <nav className="flex overflow-x-auto scrollbar-hide px-4 md:px-6" aria-label="Tabs">
+            <div className="flex space-x-4 md:space-x-8 min-w-max">
+              {[
+                { id: 'all', name: 'All Notifications', count: tabCounts.all },
+                { id: 'medication', name: 'Medication Times', count: tabCounts.medication },
+                { id: 'upcoming', name: 'Upcoming Appointments', count: tabCounts.upcoming },
+                { id: 'past', name: 'Past Appointments', count: tabCounts.past }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0 ${
+                    activeTab === tab.id
+                      ? 'border-[#2E37A4] text-[#2E37A4]'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <span className="hidden sm:inline">{tab.name}</span>
+                  <span className="sm:hidden">
+                    {tab.id === 'all' ? 'All' : 
+                     tab.id === 'medication' ? 'Meds' : 
+                     tab.id === 'upcoming' ? 'Upcoming' : 'Past'}
+                  </span>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    activeTab === tab.id
+                      ? 'bg-[#2E37A4] text-white'
+                      : 'bg-gray-100 text-gray-900'
+                  }`}>
+                    {tab.count}
+                  </span>
+                </button>
+              ))}
+            </div>
           </nav>
         </div>
 
         {/* Notifications List */}
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           <div className="space-y-4">
             {filteredNotifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`flex items-start gap-4 p-4 border rounded-lg transition-colors ${
+                className={`flex items-start gap-3 p-4 border rounded-lg transition-colors ${
                   notification.isRead
                     ? 'bg-gray-50 border-gray-200'
                     : 'bg-blue-50 border-blue-200'
                 }`}
               >
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 mt-0.5">
                   {getNotificationIcon(notification.type)}
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className={`font-semibold ${
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                    <h3 className={`font-semibold text-sm sm:text-base ${
                       notification.isRead ? 'text-gray-900' : 'text-blue-900'
                     }`}>
                       {notification.title}
                     </h3>
-                    {!notification.isRead && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        New
-                      </span>
-                    )}
-                    {activeTab === 'upcoming' && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Upcoming
-                      </span>
-                    )}
+                    <div className="flex gap-1">
+                      {!notification.isRead && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          New
+                        </span>
+                      )}
+                      {activeTab === 'upcoming' && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          Upcoming
+                        </span>
+                      )}
+                    </div>
                   </div>
                   
                   <p className={`text-sm mb-2 ${
@@ -372,7 +381,7 @@ export default function NotificationsPage() {
                     {notification.message}
                   </p>
                   
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-gray-500">
                     <div className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       <span>
@@ -384,23 +393,23 @@ export default function NotificationsPage() {
                       <span>{notification.time}</span>
                     </div>
                     {notification.relatedTo && (
-                      <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                      <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-xs">
                         {notification.relatedTo}
                       </span>
                     )}
                   </div>
                 </div>
                 
-                <button className="flex-shrink-0 text-gray-400 hover:text-gray-600">
-                  <CheckCircle2 className="w-5 h-5" />
+                <button className="flex-shrink-0 text-gray-400 hover:text-gray-600 mt-0.5">
+                  <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
             ))}
             
             {filteredNotifications.length === 0 && (
-              <div className="text-center py-12">
-                <Bell className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-500">
+              <div className="text-center py-8 sm:py-12">
+                <Bell className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-500 text-sm sm:text-base">
                   {activeTab === 'upcoming' 
                     ? 'No upcoming appointments found.' 
                     : activeTab === 'past'
@@ -417,8 +426,8 @@ export default function NotificationsPage() {
       </div>
 
       {/* Notification Contacts Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <User className="w-5 h-5 text-[#2E37A4]" />
@@ -430,7 +439,7 @@ export default function NotificationsPage() {
           </div>
           <button
             onClick={() => setShowContactModal(true)}
-            className="px-4 py-2 rounded-lg text-sm text-white bg-gradient-to-r from-[#2E37A4] to-[#0E9384] hover:opacity-90 font-medium flex items-center gap-2"
+            className="px-4 py-2 rounded-lg text-sm text-white bg-gradient-to-r from-[#2E37A4] to-[#0E9384] hover:opacity-90 font-medium flex items-center gap-2 w-fit"
           >
             <Edit3 className="w-4 h-4" />
             Edit Contacts
@@ -442,7 +451,7 @@ export default function NotificationsPage() {
             <div key={contact.id} className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h3 className="font-semibold text-gray-900">{contact.name}</h3>
+                  <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{contact.name}</h3>
                   <p className="text-sm text-gray-600">{contact.relationship}</p>
                 </div>
                 {contact.isPrimary && (
@@ -455,17 +464,18 @@ export default function NotificationsPage() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Phone className="w-4 h-4" />
-                  <span>{contact.phone}</span>
+                  <span className="text-xs sm:text-sm">{contact.phone}</span>
                 </div>
                 {contact.email && (
                   <div className="text-sm text-gray-600">
-                    <span className="font-medium">Email:</span> {contact.email}
+                    <span className="font-medium text-xs sm:text-sm">Email:</span> 
+                    <span className="text-xs sm:text-sm"> {contact.email}</span>
                   </div>
                 )}
                 {contact.address && (
                   <div className="flex items-start gap-2 text-sm text-gray-600">
                     <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                    <span>{contact.address}</span>
+                    <span className="text-xs sm:text-sm">{contact.address}</span>
                   </div>
                 )}
               </div>
@@ -476,8 +486,8 @@ export default function NotificationsPage() {
 
       {/* Edit Contact Modal */}
       {showContactModal && (
-        <div className="fixed overflow-y-auto inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-md relative">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-4 md:p-6 rounded-2xl shadow-lg w-full max-w-md relative max-h-[90vh] overflow-y-auto">
             <button 
               onClick={() => {
                 setShowContactModal(false)

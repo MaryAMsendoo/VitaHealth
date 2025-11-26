@@ -58,7 +58,7 @@ export default function DashboardHeader({ onMenuToggle }: DashboardHeaderProps) 
         <div className="flex items-center gap-2 lg:gap-4">
           {/* AI Assistance Button */}
           <Link 
-            href="/ai-assistant"
+            href="/dashboard/ai-assistant"
             className="bg-gradient-to-r from-[#2E37A4] to-[#0E9384] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-blue-800 transition-colors"
           >
             <span className="hidden sm:inline">AI Assistance</span>

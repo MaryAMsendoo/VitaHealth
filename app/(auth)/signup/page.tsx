@@ -255,29 +255,6 @@ export default function SignUp() {
               {isSubmitting ? 'Creating Account...' : 'Register'}
             </button>
 
-            {/* OR Divider */}
-            <div className="relative mb-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">OR</span>
-              </div>
-            </div>
-
-            {/* Social Login */}
-            <div className="flex justify-center gap-4 mb-6">
-              <button type="button" className="w-12 h-12 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50">
-                <Facebook className="text-blue-600 w-5 h-5" />
-              </button>
-              <button type="button" className="w-12 h-12 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50">
-                <Twitter className="text-blue-400 w-5 h-5" />
-              </button>
-              <button type="button" className="w-12 h-12 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50">
-                <Github className="text-gray-900 w-5 h-5" />
-              </button>
-            </div>
-
             {/* Login Link */}
             <p className="text-center text-sm text-gray-600">
               Already have an account?

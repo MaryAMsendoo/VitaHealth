@@ -12,7 +12,9 @@ import {
   AlertCircle,
   X,
   Receipt,
-  Banknote
+  Banknote,
+  ShoppingCart,
+  Pill
 } from 'lucide-react'
 
 interface Payment {
@@ -21,24 +23,41 @@ interface Payment {
   description: string
   amount: number
   status: 'paid' | 'pending' | 'failed'
-  type: 'consultation' | 'prescription' | 'emergency' | 'lab_test'
+  type: 'consultation' | 'prescription' | 'emergency' | 'lab_test' | 'drug_order'
   serviceDetails: string
+  items?: {
+    name: string
+    quantity: number
+    price: number
+  }[]
+  deliveryFee?: number
+  totalAmount: number
 }
 
-interface PaymentMethod {
-  id: string
-  type: 'card' | 'bank' | 'mobile'
-  lastFour: string
-  brand: string
-  isDefault: boolean
+// Mock data for drug orders
+const mockDrugOrder: Payment = {
+  id: '5',
+  date: 'Nov 1, 2025',
+  description: 'Medication Order',
+  amount: 15700,
+  status: 'pending',
+  type: 'drug_order',
+  serviceDetails: 'Pharmacy medication delivery',
+  items: [
+    { name: 'Amoxicillin 500mg', quantity: 2, price: 4500 },
+    { name: 'Paracetamol 500mg', quantity: 1, price: 1200 },
+    { name: 'Vitamin C 1000mg', quantity: 1, price: 3200 }
+  ],
+  deliveryFee: 1500,
+  totalAmount: 15700
 }
 
 export default function Payments() {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(mockDrugOrder)
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle')
-
-  const payments: Payment[] = [
+  const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending')
+  const [payments, setPayments] = useState<Payment[]>([
     {
       id: '1',
       date: 'Oct 15, 2025',
@@ -46,7 +65,8 @@ export default function Payments() {
       amount: 2500,
       status: 'paid',
       type: 'consultation',
-      serviceDetails: 'General Medicine Consultation'
+      serviceDetails: 'General Medicine Consultation',
+      totalAmount: 2500
     },
     {
       id: '2',
@@ -55,7 +75,8 @@ export default function Payments() {
       amount: 5000,
       status: 'pending',
       type: 'consultation',
-      serviceDetails: 'Cardiology Follow-up'
+      serviceDetails: 'Cardiology Follow-up',
+      totalAmount: 5000
     },
     {
       id: '3',
@@ -64,7 +85,8 @@ export default function Payments() {
       amount: 6000,
       status: 'pending',
       type: 'lab_test',
-      serviceDetails: 'Complete Blood Count Test'
+      serviceDetails: 'Complete Blood Count Test',
+      totalAmount: 6000
     },
     {
       id: '4',
@@ -73,40 +95,34 @@ export default function Payments() {
       amount: 10000,
       status: 'paid',
       type: 'emergency',
-      serviceDetails: 'Emergency Medical Attention'
-    }
-  ]
-
-  const paymentMethods: PaymentMethod[] = [
-    {
-      id: '1',
-      type: 'card',
-      lastFour: '4242',
-      brand: 'Visa',
-      isDefault: true
+      serviceDetails: 'Emergency Medical Attention',
+      totalAmount: 10000
     },
-    {
-      id: '2',
-      type: 'card',
-      lastFour: '8888',
-      brand: 'Mastercard',
-      isDefault: false
-    }
-  ]
+    mockDrugOrder
+  ])
 
   const pendingPayments = payments.filter(payment => payment.status === 'pending')
   const paidPayments = payments.filter(payment => payment.status === 'paid')
 
-  const totalDue = pendingPayments.reduce((sum, payment) => sum + payment.amount, 0)
+  const totalDue = pendingPayments.reduce((sum, payment) => sum + payment.totalAmount, 0)
   const lastPayment = paidPayments[0]
 
   const handlePayment = async (payment: Payment) => {
-    setSelectedPayment(payment)
     setPaymentStatus('processing')
 
     // Simulate payment processing
     try {
       await new Promise(resolve => setTimeout(resolve, 3000))
+      
+      // Update payment status to paid
+      setPayments(prev => 
+        prev.map(p => 
+          p.id === payment.id 
+            ? { ...p, status: 'paid', date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }
+            : p
+        )
+      )
+      
       setPaymentStatus('success')
 
       // Reset after success
@@ -114,6 +130,7 @@ export default function Payments() {
         setShowPaymentModal(false)
         setPaymentStatus('idle')
         setSelectedPayment(null)
+        setActiveTab('history') // Switch to history tab after payment
       }, 3000)
     } catch (error) {
       setPaymentStatus('error')
@@ -135,6 +152,7 @@ export default function Payments() {
       case 'emergency': return <AlertCircle className="w-4 h-4" />
       case 'lab_test': return <CheckCircle className="w-4 h-4" />
       case 'prescription': return <Receipt className="w-4 h-4" />
+      case 'drug_order': return <ShoppingCart className="w-4 h-4" />
       default: return <Banknote className="w-4 h-4" />
     }
   }
@@ -151,7 +169,6 @@ export default function Payments() {
           <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Payments & Billing</h1>
           <p className="text-gray-600 mt-1">Manage your medical bills and payment history</p>
         </div>
-
       </div>
 
       {/* Payment Stats */}
@@ -173,143 +190,162 @@ export default function Payments() {
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <p className="text-sm text-gray-500 mb-1">Pending Bills</p>
-          <h3 className="text-2xl font-bold text-red-600">{pendingPayments.length}</h3>
-          <p className="text-xs text-gray-400 mt-1">Require immediate attention</p>
+          <p className="text-sm text-gray-500 mb-1">Paid Bills</p>
+          <h3 className="text-2xl font-bold text-green-600">{paidPayments.length}</h3>
+          <p className="text-xs text-gray-400 mt-1">Successfully processed</p>
         </div>
       </div>
 
-      {/* Pending Payments */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Clock className="w-5 h-5 text-yellow-600" />
-          Pending Payments
-        </h2>
+      {/* Tabs */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="border-b border-gray-200">
+          <div className="flex space-x-8 px-6">
+            <button
+              onClick={() => setActiveTab('pending')}
+              className={`py-4 border-b-2 font-medium text-sm ${
+                activeTab === 'pending'
+                  ? 'border-[#2E37A4] text-[#2E37A4]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Pending Payments ({pendingPayments.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`py-4 border-b-2 font-medium text-sm ${
+                activeTab === 'history'
+                  ? 'border-[#2E37A4] text-[#2E37A4]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Payment History ({paidPayments.length})
+            </button>
+          </div>
+        </div>
 
-        <div className="space-y-4">
-          {pendingPayments.map((payment) => (
-            <div key={payment.id} className="flex justify-between items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
-                  {getTypeIcon(payment.type)}
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-800">{payment.description}</p>
-                  <p className="text-xs text-gray-500">{payment.serviceDetails}</p>
-                  <p className="text-xs text-gray-400">Issued: {payment.date}</p>
-                </div>
-              </div>
+        <div className="p-6">
+          {activeTab === 'pending' ? (
+            <div className="space-y-4">
+              {pendingPayments.map((payment) => (
+                <div key={payment.id} className="flex justify-between items-start p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                  <div className="flex items-start gap-3 flex-1">
+                    <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mt-1">
+                      {getTypeIcon(payment.type)}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-800">{payment.description}</p>
+                      <p className="text-xs text-gray-500">{payment.serviceDetails}</p>
+                      <p className="text-xs text-gray-400">Issued: {payment.date}</p>
+                      
+                      {/* Drug Order Items */}
+                      {payment.type === 'drug_order' && payment.items && (
+                        <div className="mt-2 space-y-1">
+                          {payment.items.map((item, index) => (
+                            <div key={index} className="flex justify-between text-xs text-gray-600">
+                              <span>{item.name} x {item.quantity}</span>
+                              <span>{formatAmount(item.price * item.quantity)}</span>
+                            </div>
+                          ))}
+                          {payment.deliveryFee && payment.deliveryFee > 0 && (
+                            <div className="flex justify-between text-xs text-gray-600">
+                              <span>Delivery Fee</span>
+                              <span>{formatAmount(payment.deliveryFee)}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between text-xs font-medium text-gray-800 border-t pt-1">
+                            <span>Total</span>
+                            <span>{formatAmount(payment.totalAmount)}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-              <div className="text-right">
-                <p className="font-semibold text-gray-800">{formatAmount(payment.amount)}</p>
-                <button
-                  onClick={() => {
-                    setSelectedPayment(payment)
-                    setShowPaymentModal(true)
-                  }}
-                  className="text-sm text-[#2E37A4] hover:underline mt-1"
-                >
-                  Pay Now
-                </button>
-              </div>
+                  <div className="text-right ml-4">
+                    <p className="font-semibold text-gray-800 text-lg">{formatAmount(payment.totalAmount)}</p>
+                    <button
+                      onClick={() => {
+                        setSelectedPayment(payment)
+                        setShowPaymentModal(true)
+                      }}
+                      className="text-sm text-white bg-gradient-to-r from-[#2E37A4] to-[#0E9384] hover:opacity-90 px-4 py-2 rounded-lg mt-2"
+                    >
+                      Pay Now
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {pendingPayments.length === 0 && (
+                <div className="text-center py-8">
+                  <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                  <p className="text-gray-500">No pending payments</p>
+                  <p className="text-sm text-gray-400 mt-1">All bills are paid up to date</p>
+                </div>
+              )}
             </div>
-          ))}
+          ) : (
+            <div className="space-y-4">
+              {paidPayments.map((payment) => (
+                <div key={payment.id} className="flex justify-between items-start p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start gap-3 flex-1">
+                    <div className="w-8 h-8 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mt-1">
+                      {getTypeIcon(payment.type)}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm font-medium text-gray-800">{payment.description}</p>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(payment.status)}`}>
+                          Paid
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500">{payment.serviceDetails}</p>
+                      <p className="text-xs text-gray-400">Paid on: {payment.date}</p>
+                      
+                      {payment.type === 'drug_order' && payment.items && (
+                        <div className="mt-2 space-y-1">
+                          {payment.items.map((item, index) => (
+                            <div key={index} className="flex justify-between text-xs text-gray-600">
+                              <span>{item.name} x {item.quantity}</span>
+                              <span>{formatAmount(item.price * item.quantity)}</span>
+                            </div>
+                          ))}
+                          {payment.deliveryFee && payment.deliveryFee > 0 && (
+                            <div className="flex justify-between text-xs text-gray-600">
+                              <span>Delivery Fee</span>
+                              <span>{formatAmount(payment.deliveryFee)}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-          {pendingPayments.length === 0 && (
-            <div className="text-center py-8">
-              <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
-              <p className="text-gray-500">No pending payments</p>
+                  <div className="text-right ml-4">
+                    <p className="font-semibold text-gray-800 text-lg">{formatAmount(payment.totalAmount)}</p>
+                    <button className="text-sm text-[#2E37A4] hover:underline mt-2 flex items-center gap-1 ml-auto">
+                      <Download className="w-3 h-3" />
+                      Receipt
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {paidPayments.length === 0 && (
+                <div className="text-center py-8">
+                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500">No payment history available</p>
+                  <p className="text-sm text-gray-400 mt-1">Your paid bills will appear here</p>
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
 
-      {/* Payment History */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Payment History</h2>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-gray-500 text-left border-b">
-                <th className="pb-3 font-medium">Date</th>
-                <th className="pb-3 font-medium">Description</th>
-                <th className="pb-3 font-medium">Amount</th>
-                <th className="pb-3 font-medium">Status</th>
-                <th className="pb-3 font-medium text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paidPayments.map((payment) => (
-                <tr key={payment.id} className="border-b hover:bg-gray-50">
-                  <td className="py-3 text-gray-700">{payment.date}</td>
-                  <td className="py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded flex items-center justify-center">
-                        {getTypeIcon(payment.type)}
-                      </div>
-                      <span>{payment.description}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 font-medium text-gray-800">{formatAmount(payment.amount)}</td>
-                  <td className="py-3">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(payment.status)}`}>
-                      {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className="py-3 text-right">
-                    <button className="text-[#2E37A4] hover:underline text-sm flex items-center gap-1 ml-auto">
-                      <Download className="w-3 h-3" />
-                      Receipt
-                    </button>
-                  </td>
-                </tr>
-              ))}
-
-              {paidPayments.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-500">
-                    No payment history available
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Payment Methods */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Payment Methods</h2>
-
-        <div className="space-y-3">
-          {paymentMethods.map((method) => (
-            <div key={method.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-              <div className="flex items-center gap-3">
-                <CreditCard className="w-5 h-5 text-gray-600" />
-                <div>
-                  <p className="text-sm font-medium text-gray-800">
-                    {method.brand} •••• {method.lastFour}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {method.isDefault ? 'Default payment method' : 'Secondary payment method'}
-                  </p>
-                </div>
-              </div>
-              {method.isDefault && (
-                <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
-                  Default
-                </span>
-              )}
-            </div>
-          ))}
-
-        </div>
-      </div>
-
       {/* Payment Modal */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      {showPaymentModal && selectedPayment && (
+        <div className="fixed overflow-y-auto inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-md relative">
             <button
               onClick={() => setShowPaymentModal(false)}
@@ -323,54 +359,91 @@ export default function Payments() {
                 <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Payment Successful!</h3>
                 <p className="text-gray-600">Your payment has been processed successfully.</p>
+                <div className="bg-gray-50 rounded-lg p-4 mt-4">
+                  <p className="text-sm font-medium text-gray-900">{selectedPayment.description}</p>
+                  <p className="text-lg font-bold text-[#2E37A4] mt-1">{formatAmount(selectedPayment.totalAmount)}</p>
+                  <p className="text-xs text-gray-500 mt-1">Paid on: {new Date().toLocaleDateString()}</p>
+                </div>
+                <p className="text-sm text-gray-500 mt-4">Redirecting to payment history...</p>
               </div>
             ) : (
               <>
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Make a Payment</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Complete Payment</h2>
 
-                {selectedPayment && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                    <p className="text-sm font-medium text-blue-900">{selectedPayment.description}</p>
-                    <p className="text-lg font-bold text-blue-900 mt-1">{formatAmount(selectedPayment.amount)}</p>
+                {/* Order Summary for Drug Orders */}
+                {selectedPayment.type === 'drug_order' && selectedPayment.items && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <h3 className="font-medium text-blue-900 mb-3">Order Summary</h3>
+                    <div className="space-y-2">
+                      {selectedPayment.items.map((item, index) => (
+                        <div key={index} className="flex justify-between text-sm">
+                          <span>{item.name} x {item.quantity}</span>
+                          <span>{formatAmount(item.price * item.quantity)}</span>
+                        </div>
+                      ))}
+                      {selectedPayment.deliveryFee && selectedPayment.deliveryFee > 0 && (
+                        <div className="flex justify-between text-sm border-t pt-2">
+                          <span>Delivery Fee</span>
+                          <span>{formatAmount(selectedPayment.deliveryFee)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-semibold text-blue-900 border-t pt-2">
+                        <span>Total</span>
+                        <span>{formatAmount(selectedPayment.totalAmount)}</span>
+                      </div>
+                    </div>
                   </div>
                 )}
 
                 <form className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-600 mb-2">Amount</label>
+                    <label className="block text-sm text-gray-600 mb-2">Amount to Pay</label>
                     <input
                       type="text"
-                      value={selectedPayment ? formatAmount(selectedPayment.amount) : '₦0'}
+                      value={formatAmount(selectedPayment.totalAmount)}
                       readOnly
-                      className="w-full border border-gray-300 rounded-lg p-3 text-sm bg-gray-50"
+                      className="w-full border border-gray-300 rounded-lg p-3 text-sm bg-gray-50 font-semibold text-center text-lg"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-600 mb-2">Payment Method</label>
+                    <label className="block text-sm text-gray-600 mb-2">Select Payment Method</label>
                     <select className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <option>Visa •••• 4242 (Default)</option>
-                      <option>Mastercard •••• 8888</option>
-                      <option>Add new payment method</option>
+                      <option>Credit/Debit Card</option>
+                      <option>Bank Transfer</option>
+                      <option>Mobile Money</option>
+                      <option>USSD</option>
                     </select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  {/* Card Details - Show only if card is selected */}
+                  <div className="space-y-3">
                     <div>
-                      <label className="block text-sm text-gray-600 mb-2">Expiry Date</label>
+                      <label className="block text-sm text-gray-600 mb-2">Card Number</label>
                       <input
                         type="text"
-                        placeholder="MM/YY"
+                        placeholder="1234 5678 9012 3456"
                         className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm text-gray-600 mb-2">CVV</label>
-                      <input
-                        type="password"
-                        placeholder="•••"
-                        className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-2">Expiry Date</label>
+                        <input
+                          type="text"
+                          placeholder="MM/YY"
+                          className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-2">CVV</label>
+                        <input
+                          type="password"
+                          placeholder="•••"
+                          className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -384,9 +457,9 @@ export default function Payments() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => selectedPayment && handlePayment(selectedPayment)}
+                      onClick={() => handlePayment(selectedPayment)}
                       disabled={paymentStatus === 'processing'}
-                      className="px-4 py-2 rounded-lg text-sm text-white bg-gradient-to-r from-[#2E37A4] to-[#0E9384] hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                      className="px-6 py-2 rounded-lg text-sm text-white bg-gradient-to-r from-[#2E37A4] to-[#0E9384] hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
                     >
                       {paymentStatus === 'processing' ? (
                         <>
@@ -394,7 +467,7 @@ export default function Payments() {
                           Processing...
                         </>
                       ) : (
-                        'Pay Now'
+                        `Pay ${formatAmount(selectedPayment.totalAmount)}`
                       )}
                     </button>
                   </div>
@@ -412,7 +485,8 @@ export default function Payments() {
           <div>
             <h3 className="font-semibold text-blue-900 text-sm">Payment Security</h3>
             <p className="text-blue-700 text-xs mt-1">
-              All payments are processed securely. No third-party payment processors are used in accordance with our regulatory compliance.
+              All payments are processed securely through our encrypted payment gateway. 
+              Your financial information is protected and never stored on our servers.
             </p>
           </div>
         </div>
